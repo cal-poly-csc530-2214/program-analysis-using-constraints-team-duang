@@ -1,7 +1,40 @@
 from z3 import *
 
+# assuming all variables are integers
+def convert_program_to_constraints(filename: str) -> list:
+    f = open(filename, "r")
+    lines = f.readlines()
+    list_of_constraints = []
+    list_of_variables = []
+
+    idx = 0
+    while (idx < len(lines)):
+        line = lines[idx].strip()
+
+        # start of a clause
+        if "{" in line:
+            pass
+
+        idx += 1
+
+
+'''
+    for line in lines:
+        line = line.strip()
+        
+        # assignment 
+        if "=" in line:
+            pass
+        # implies
+        elif "while" in line:
+
+'''
+
 
 def main():
+
+    convert_program_to_constraints("test.txt")
+
     s = Solver()
     x = Int('x')
     y = Int('y')
