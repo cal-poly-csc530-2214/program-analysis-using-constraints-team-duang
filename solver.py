@@ -1,46 +1,122 @@
 from z3 import *
 
+def getAlterCondition(condition):
+    items = condition.split(" ")
+
+    if items[1] == '<':
+        items[1] = '>='
+    elif items[1] == '>':
+        items[1] = '<='
+    elif items[1] == '>=':
+        items[1] = '<'
+    elif items[1] == '<=':
+        items[1] = '>'
+
+    return " ".join(items)
+
 # assuming all variables are integers
 def convert_program_to_constraints(filename: str) -> list:
     f = open(filename, "r")
     lines = f.readlines()
     list_of_constraints = []
-    list_of_variables = []
 
     idx = 0
+    start = False
+
+    constraint = "true => "
+    alterCondition = ""
     while (idx < len(lines)):
         line = lines[idx].strip()
 
         # start of a clause
-        if "{" in line:
-            pass
+        if "while" in line:
+            start = True
+            condition = line[line.find("(") + 1: line.find(")")]
+            alterCondition = getAlterCondition(condition)
+            constraint += "I \u2227 " + condition + " => I["
+            # one constraint util "{...}"
+            # while constraint => I[while loop]
+            #(x+y)/x   (after) / before
+        if "=" in line:
+            #IF START IS TRUE I [ sdlfkj,. asdj]
+            before = line[:line.find("=")]
+            after = line[line.find("=") + 1:]
+            
+            if (start == False):
+                constraint += "I[({0} ) / {1}]".format(after, before)
+                list_of_constraints.append(constraint)
+                constraint = ""
+            else:
+                constraint += "({0} ) / {1}".format(after, before)
+                constraint += ", "
+        if "++" in line:
+            before = line[:line.find("+")]
+            constraint += "({0} + 1) / {0}".format(before)
+            if (start == False):
+                list_of_constraints.append(constraint)
+                constraint = ""
+            else:
+                constraint += ", "
+        if "--" in line:
+            before = line[:line.find("+")]
+            constraint += "({0} - 1) / {0}".format(before)
+            if (start == False):
+                list_of_constraints.append(constraint)
+                constraint = ""
+            else:
+                constraint += ", "
+        if "}" in line and start == True:
+            start = False
+            constraint = constraint[:-2]
+            constraint += "]"
+            list_of_constraints.append(constraint)
+            constraint = "I \u2227 " + alterCondition
+        if "assert" in line:
+            assertion = line[line.find("(") + 1: line.find(")")]
+            constraint = constraint + " => " + assertion
+            list_of_constraints.append(constraint)
 
         idx += 1
 
+    return list_of_constraints
 
-'''
-    for line in lines:
-        line = line.strip()
-        
-        # assignment 
-        if "=" in line:
-            pass
-        # implies
-        elif "while" in line:
 
 '''
 
+declare x0, a0 // initial values
+declare a1, x1 // values after first unrolling
+x0 > 10 && x0 < 100 ==> a1 == a0 + x0 && x1 == x0 + 1
+declare a2, x2 // values after second unrolling
+x1 > 10 && x1 < 100 ==> a2 == a1 + x1 && x2 == x1 + 1
+
+'''
+
+'''
+# declare variables
+x = Int('x')
+y = Int('y')
+
+s = Solver()
+
+s.add(x = -50, while loop, y > 0) //start cut point
+
+s.check()
+
+'''
 
 def main():
 
-    convert_program_to_constraints("test.txt")
+    list_of_constraints = convert_program_to_constraints("test.txt")
+
+    for item in list_of_constraints:
+        print(item)
 
     s = Solver()
     x = Int('x')
     y = Int('y')
-    solve(x > 2, y < 10, x + 2*y == 7)
-    print(simplify(x + y + 2*x + 3))
-    print(simplify(And(x + 1 >= 3, x**2 + x**2 + y**2 + 2 >= 5)))
+ #   solve(x > 2, y < 10, x + 2*y == 7)
+ #   print(simplify(x + y + 2*x + 3))
+ #   print(simplify(And(x + 1 >= 3, x**2 + x**2 + y**2 + 2 >= 5)))
 
 
 if __name__ == "__main__":
