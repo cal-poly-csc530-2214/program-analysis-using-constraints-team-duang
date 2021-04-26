@@ -38,7 +38,6 @@ def convert_program_to_constraints(filename: str) -> list:
             # while constraint => I[while loop]
             #(x+y)/x   (after) / before
         if "=" in line:
-            #IF START IS TRUE I [ sdlfkj,. asdj]
             before = line[:line.find("=")]
             after = line[line.find("=") + 1:]
             
@@ -80,9 +79,16 @@ def convert_program_to_constraints(filename: str) -> list:
 
     return list_of_constraints
 
+def solve_with_z3(list_of_constraints: list):
+    x, y = Bools('x y')
+
+    
+    s = Solver()
+
+    print(s.check())
+
 
 '''
-
 declare x0, a0 // initial values
 declare a1, x1 // values after first unrolling
 x0 > 10 && x0 < 100 ==> a1 == a0 + x0 && x1 == x0 + 1
@@ -98,6 +104,10 @@ y = Int('y')
 
 s = Solver()
 
+true implies I[-50 / x]
+I and x < 0 implies I[y+1]/y , (x+y)/x)
+I and x >= 0 implies y > 0
+
 s.add(x = -50, while loop, y > 0) //start cut point
 
 s.check()
@@ -111,12 +121,7 @@ def main():
     for item in list_of_constraints:
         print(item)
 
-    s = Solver()
-    x = Int('x')
-    y = Int('y')
- #   solve(x > 2, y < 10, x + 2*y == 7)
- #   print(simplify(x + y + 2*x + 3))
- #   print(simplify(And(x + 1 >= 3, x**2 + x**2 + y**2 + 2 >= 5)))
+    solve_with_z3(list_of_constraints)
 
 
 if __name__ == "__main__":
